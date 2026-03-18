@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Euphoria Elite | Ultra Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Euphoria Elite | Smart Check-in</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -11,93 +11,83 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     
     <style>
-        :root { --primary: #9d4edd; --bg: #0b0b0f; --card: #16161d; --text: #ffffff; --danger: #ef4444; --success: #4ade80; }
+        :root { --primary: #9d4edd; --bg: #0b0b0f; --card: #16161d; --text: #ffffff; --danger: #ef4444; --success: #4ade80; --warning: #facc15; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
         .container { max-width: 600px; margin: auto; display: none; }
         .card { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid #333; margin-bottom: 15px; }
-        input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 10px; border: 1px solid #444; background: #222; color: white; box-sizing: border-box; font-size: 16px; }
-        button { background: var(--primary); font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.98); }
-        .btn-danger { background: var(--danger); }
+        input, button { width: 100%; padding: 14px; margin: 5px 0; border-radius: 10px; border: 1px solid #444; background: #222; color: white; box-sizing: border-box; font-size: 16px; }
+        button { background: var(--primary); font-weight: bold; border: none; cursor: pointer; }
         .btn-success { background: var(--success); color: black; }
-
-        /* شاشة الدخول */
+        .btn-danger { background: var(--danger); font-size: 11px; padding: 6px; width: auto; }
+        
         #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .stats-bar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .stat-card { flex: 1; background: #1a1a24; padding: 12px; border-radius: 12px; text-align: center; border: 1px solid #333; }
+        .stat-val { display: block; font-size: 24px; font-weight: bold; color: var(--primary); }
         
-        /* عداد الفرز */
-        .stats { display: flex; gap: 10px; margin-bottom: 15px; }
-        .stat-box { flex: 1; background: #1a1a24; padding: 12px; border-radius: 12px; text-align: center; border: 1px solid #333; }
-        .stat-num { display: block; font-size: 22px; font-weight: bold; color: var(--primary); }
-
-        /* نافذة التذكرة */
+        #status-display { padding: 15px; border-radius: 10px; margin-top: 10px; text-align: center; font-weight: bold; display: none; border: 2px solid transparent; }
+        .table-wrapper { overflow-x: auto; background: #111; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #222; }
+        .time-tag { font-size: 10px; color: var(--success); display: block; }
         #ticket-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; }
-        #ticket-design { background: white; color: black; padding: 25px; border-radius: 15px; width: 260px; text-align: center; border: 5px solid #000; }
-        
-        /* الأرشيف */
-        .archive-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
-        .archive-table th, .archive-table td { padding: 8px; border: 1px solid #222; text-align: left; }
-        .row-in { background: rgba(74, 222, 128, 0.1); }
-        .action-btns { display: flex; gap: 5px; }
-        .mini-btn { padding: 5px; font-size: 10px; width: auto; margin: 0; }
+        #ticket-design { background: white; color: black; padding: 25px; border-radius: 15px; width: 270px; text-align: center; border: 4px solid #000; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div style="text-align: center; width: 80%;">
-        <div style="font-size: 50px; margin-bottom: 10px;">💎</div>
-        <h2 style="color: var(--primary); letter-spacing: 2px;">EUPHORIA ELITE</h2>
-        <input type="password" id="adminPass" placeholder="Enter Password">
-        <button onclick="unlock()">UNLOCK SYSTEM</button>
+    <div style="text-align: center; width: 85%;">
+        <h1 style="color:var(--primary);">EUPHORIA</h1>
+        <input type="password" id="adminPass" placeholder="Admin Password">
+        <button onclick="unlock()">ACCESS SYSTEM</button>
     </div>
 </div>
 
 <div id="ticket-modal">
     <div id="ticket-design">
-        <h2 style="margin:0; font-weight: 900;">EUPHORIA</h2>
-        <p style="margin:0; font-size:10px; letter-spacing:3px;">ELITE ACCESS</p>
-        <div id="qrcode" style="display:flex; justify-content:center; margin:15px 0;"></div>
-        <div id="ticket-info" style="font-family:monospace; font-size:12px; text-align:left; border-top: 1px solid #ddd; padding-top:10px;"></div>
+        <h2 style="margin:0; font-weight:900;">EUPHORIA ELITE</h2>
+        <div id="qrcode" style="display:flex; justify-content:center; margin:20px 0;"></div>
+        <div id="ticket-info" style="font-family:monospace; font-size:13px; text-align:left;"></div>
     </div>
-    <button style="width:270px; margin-top:15px; background:var(--success); color:black;" onclick="saveTicket()">📥 SAVE TO GALLERY</button>
-    <button style="width:270px; background:#444;" onclick="closeModal()">CLOSE</button>
+    <button style="width:270px; margin-top:20px; background:var(--success); color:black;" onclick="saveTicket()">📥 SAVE TO PHOTOS</button>
+    <button style="width:270px; background:#333;" onclick="closeModal()">CLOSE</button>
 </div>
 
 <div class="container" id="app">
-    <div class="stats">
-        <div class="stat-box">Total<span class="stat-num" id="totalCount">0</span></div>
-        <div class="stat-box">Inside<span class="stat-num" id="inCount" style="color:var(--success)">0</span></div>
+    <div class="stats-bar">
+        <div class="stat-card">Total<span class="stat-val" id="totalCount">0</span></div>
+        <div class="stat-card">Inside<span class="stat-val" id="inCount" style="color:var(--success)">0</span></div>
     </div>
 
     <div class="card">
         <h3>🎫 Issue Ticket</h3>
-        <input type="text" id="guest" placeholder="Guest Full Name">
-        <button onclick="issue()">CREATE TICKET</button>
+        <input type="text" id="guestName" placeholder="Guest Full Name">
+        <button onclick="issueTicket()">GENERATE TICKET</button>
     </div>
 
-    <div class="card" style="border-color: var(--success);">
-        <h3>🛡️ Check-in Control</h3>
-        <div id="reader" style="border-radius:10px; overflow:hidden; background: #000;"></div>
-        <input type="text" id="manualID" placeholder="Enter ID Manually (e.g. EUP-XXXXX)" style="margin-top:10px;">
-        <button class="btn-success" onclick="verify(document.getElementById('manualID').value)">CONFIRM ENTRY</button>
-        <div id="msg" style="text-align:center; padding:10px; font-weight:bold; min-height: 40px;"></div>
+    <div class="card" style="border-color: var(--primary);">
+        <h3>🛡️ Smart Scanner & Check-in</h3>
+        <div id="reader" style="border-radius:10px; overflow:hidden; background:#000;"></div>
+        
+        <div id="status-display"></div>
+        
+        <input type="text" id="targetID" placeholder="ID (Manual or Auto-Scan)" style="margin-top:10px;">
+        <button class="btn-success" id="confirmBtn" onclick="confirmCheckIn()" style="display:none;">CONFIRM ENTRY</button>
     </div>
 
     <div class="card">
-        <h3>📋 Ticket Archive & Registry</h3>
-        <div style="max-height: 400px; overflow-y: auto;">
-            <table class="archive-table">
-                <thead>
-                    <tr><th>Name</th><th>Status</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="archiveBody"></tbody>
+        <h3>📋 Live Registry & Archive</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Guest / Time</th><th>ID</th><th>Action</th></tr></thead>
+                <tbody id="registryBody"></tbody>
             </table>
         </div>
     </div>
 </div>
 
 <script>
-// بيانات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyDbla1Ok8aSs2IUUeB6v-2tRriNPWmYTvE",
     authDomain: "euphoria-tickets-480c5.firebaseapp.com",
@@ -109,84 +99,106 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// الدخول
 function unlock() {
     if(document.getElementById("adminPass").value === "euphoria+249") {
         document.getElementById("login-screen").style.display = "none";
         document.getElementById("app").style.display = "block";
-        initScanner();
-    } else { alert("Access Denied!"); }
+        startScanner();
+    } else { alert("Wrong Password!"); }
 }
 
-// تحديث الأرشيف والعدادات
-db.collection("tickets").orderBy("createdAt", "desc").onSnapshot(snap => {
-    const body = document.getElementById("archiveBody");
-    let inCount = 0;
-    body.innerHTML = "";
-    snap.forEach(doc => {
-        const d = doc.data();
-        if(d.used) inCount++;
-        body.innerHTML += `
-            <tr class="${d.used ? 'row-in' : ''}">
-                <td>${d.name}</td>
-                <td>${d.used ? '✅' : '⏳'}</td>
-                <td class="action-btns">
-                    <button class="mini-btn" onclick="reopen('${doc.id}', '${d.name}')">View</button>
-                    <button class="mini-btn btn-danger" onclick="deleteTicket('${doc.id}')">Del</button>
-                </td>
-            </tr>`;
-    });
-    document.getElementById("totalCount").innerText = snap.size;
-    document.getElementById("inCount").innerText = inCount;
-});
-
-// إصدار تذكرة
-function issue() {
-    const name = document.getElementById("guest").value;
-    if(!name) return;
-    const id = "EUP-" + Math.random().toString(36).substr(2, 5).toUpperCase();
-    db.collection("tickets").doc(id).set({
-        name: name,
-        used: false,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-        reopen(id, name);
-        document.getElementById("guest").value = "";
+function startScanner() {
+    const scanner = new Html5Qrcode("reader");
+    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (id) => {
+        document.getElementById("targetID").value = id;
+        checkTicketStatus(id);
     });
 }
 
-// التحقق من التذكرة (التشك إن)
-function verify(id) {
-    if(!id) return;
-    const cleanID = id.trim().toUpperCase();
-    db.collection("tickets").doc(cleanID).get().then(doc => {
-        const m = document.getElementById("msg");
-        if(!doc.exists) { m.innerText = "❌ INVALID ID"; m.style.color="var(--danger)"; }
-        else if(doc.data().used) { m.innerText = "⚠️ ALREADY INSIDE"; m.style.color="orange"; }
-        else {
-            db.collection("tickets").doc(cleanID).update({ used: true, checkTime: new Date().toLocaleTimeString() });
-            m.innerText = "✅ WELCOME: " + doc.data().name; m.style.color="var(--success)";
-            document.getElementById("manualID").value = "";
+// وظيفة فحص حالة التذكرة فورياً عند المسح
+function checkTicketStatus(id) {
+    const display = document.getElementById("status-display");
+    const confirmBtn = document.getElementById("confirmBtn");
+    display.style.display = "block";
+    
+    db.collection("tickets").doc(id.trim().toUpperCase()).get().then(doc => {
+        if(!doc.exists) {
+            display.innerText = "❌ Ticket Not Found!";
+            display.style.borderColor = "var(--danger)";
+            display.style.color = "var(--danger)";
+            confirmBtn.style.display = "none";
+        } else {
+            const data = doc.data();
+            if(data.used) {
+                display.innerHTML = `⚠️ ALREADY USED!<br><small>Guest: ${data.name}<br>Checked in at: ${data.checkInTime}</small>`;
+                display.style.borderColor = "var(--warning)";
+                display.style.color = "var(--warning)";
+                confirmBtn.style.display = "none";
+            } else {
+                display.innerHTML = `✅ VALID TICKET<br><small>Guest: ${data.name}</small>`;
+                display.style.borderColor = "var(--success)";
+                display.style.color = "var(--success)";
+                confirmBtn.style.display = "block"; // إظهار زر التأكيد فقط إذا كانت صالحة
+            }
         }
     });
 }
 
-// حذف تذكرة
-function deleteTicket(id) {
-    if(confirm("Delete this ticket permanently?")) {
-        db.collection("tickets").doc(id).delete();
-    }
+function confirmCheckIn() {
+    const id = document.getElementById("targetID").value.trim().toUpperCase();
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    db.collection("tickets").doc(id).update({ 
+        used: true, 
+        checkInTime: now 
+    }).then(() => {
+        document.getElementById("status-display").innerHTML = "🎉 ENTRY CONFIRMED!";
+        document.getElementById("confirmBtn").style.display = "none";
+        document.getElementById("targetID").value = "";
+    });
 }
 
-// فتح التذكرة مرة أخرى
-function reopen(id, name) {
+// تحديث الأرشيف والعدادات
+db.collection("tickets").orderBy("createdAt", "desc").onSnapshot(snap => {
+    const body = document.getElementById("registryBody");
+    let count = 0;
+    body.innerHTML = "";
+    snap.forEach(doc => {
+        const d = doc.data();
+        if(d.used) count++;
+        body.innerHTML += `
+            <tr style="${d.used ? 'background:rgba(74,222,128,0.05)' : ''}">
+                <td>
+                    <b>${d.name}</b>
+                    ${d.used ? `<span class="time-tag">In: ${d.checkInTime}</span>` : '<span style="color:#444">Waiting...</span>'}
+                </td>
+                <td style="font-family:monospace; font-size:10px;">${doc.id}</td>
+                <td><button class="btn-danger" onclick="deleteDoc('${doc.id}')">Delete</button></td>
+            </tr>`;
+    });
+    document.getElementById("totalCount").innerText = snap.size;
+    document.getElementById("inCount").innerText = count;
+});
+
+function issueTicket() {
+    const name = document.getElementById("guestName").value;
+    if(!name) return;
+    const id = "EUP-" + Math.random().toString(36).substr(2, 5).toUpperCase();
+    db.collection("tickets").doc(id).set({
+        name: name, used: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        showModal(id, name);
+        document.getElementById("guestName").value = "";
+    });
+}
+
+function showModal(id, name) {
     document.getElementById("qrcode").innerHTML = "";
-    new QRCode(document.getElementById("qrcode"), { text: id, width: 150, height: 150 });
-    document.getElementById("ticket-info").innerText = `TICKET ID: ${id}\nGUEST: ${name.toUpperCase()}\nSTATUS: VERIFIED`;
+    new QRCode(document.getElementById("qrcode"), { text: id, width: 160, height: 160 });
+    document.getElementById("ticket-info").innerText = `GUEST: ${name.toUpperCase()}\nID: ${id}\nDATE: 18/03/2026`;
     document.getElementById("ticket-modal").style.display = "flex";
 }
 
-// حفظ كصورة
 function saveTicket() {
     html2canvas(document.getElementById("ticket-design")).then(canvas => {
         const link = document.createElement('a');
@@ -196,10 +208,7 @@ function saveTicket() {
     });
 }
 
-function initScanner() {
-    const scanner = new Html5Qrcode("reader");
-    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, (id) => verify(id));
-}
+function deleteDoc(id) { if(confirm("Delete this ticket?")) db.collection("tickets").doc(id).delete(); }
 function closeModal() { document.getElementById("ticket-modal").style.display = "none"; }
 </script>
 </body>
