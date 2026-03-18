@@ -1,62 +1,67 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Euphoria Tickets - Pro</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
-
-  <style>
-    body { font-family: Arial; background: #0b0b0f; color: white; text-align: center; padding: 20px; }
-    .card { background: #16161d; padding: 20px; border-radius: 15px; max-width: 400px; margin: auto; }
-    input, select, button { margin: 10px 0; padding: 12px; width: 100%; border-radius: 8px; border: none; }
-    button { background: purple; color: white; font-weight: bold; cursor: pointer; }
-    #qrcode-container { background: white; padding: 20px; margin-top: 20px; display: none; border-radius: 10px; color: black; }
-    #qrcode { display: flex; justify-content: center; }
-    #reader { width: 100%; margin-top: 15px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Euphoria Elite | Pro System</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root { --primary: #9d4edd; --bg: #0b0b0f; --card: #16161d; --text: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; text-align: center; }
+        .container { max-width: 500px; margin: auto; }
+        .logo { width: 100px; margin-bottom: 10px; border-radius: 50%; border: 2px solid var(--primary); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; }
+        .stat-box { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #333; }
+        .stat-box small { color: #888; font-size: 11px; text-transform: uppercase; }
+        .stat-box div { font-size: 24px; font-weight: bold; margin-top: 5px; color: var(--primary); }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px; text-align: left; }
+        input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; }
+        button { background: var(--primary); font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); }
+        #ticket-output { display: none; background: white; color: black; padding: 20px; border-radius: 10px; margin-top: 15px; }
+        @media print { body * { visibility: hidden; } #ticket-output, #ticket-output * { visibility: visible; } #ticket-output { position: absolute; left: 0; top: 0; width: 100%; } }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <img src="https://via.placeholder.com/100?text=LOGO" class="logo" alt="Euphoria Logo">
+        <h1>Euphoria Elite</h1>
 
-  <h2>Euphoria Tickets</h2>
+        <div class="stats-grid">
+            <div class="stat-box"><small>Total Issued</small><div id="total">0</div></div>
+            <div class="stat-box"><small>Checked In</small><div id="checked" style="color: #4ade80;">0</div></div>
+        </div>
 
-  <div id="login" class="card">
-    <input type="password" id="pass" placeholder="كلمة المرور">
-    <button onclick="login()">دخول</button>
-  </div>
+        <div class="card">
+            <h3 style="margin-top:0">Issue New Ticket</h3>
+            <select id="eventSelect">
+                <script>
+                    for(let i=1; i<=20; i++) document.write(`<option value="Party ${i}">Party Event ${i}</option>`);
+                </script>
+            </select>
+            <input type="text" id="guestName" placeholder="Guest Name">
+            <select id="ticketType"><option>Regular</option><option>VIP 💎</option></select>
+            <button onclick="generateTicket()">Generate & Save</button>
+            <div id="ticket-output">
+                <h2 style="margin:0">EUPHORIA TICKET</h2>
+                <div id="qrcode" style="display:flex; justify-content:center; margin:15px 0;"></div>
+                <div id="tInfo" style="font-weight:bold;"></div>
+                <button onclick="window.print()" style="background:black; margin-top:10px;">Print Now</button>
+            </div>
+        </div>
 
-  <div id="app" style="display:none;" class="card">
-    <h3>إصدار تذكرة</h3>
-    <select id="eventSelect">
-      <option value="party_1">حفلة رقم 1</option>
-      <option value="party_2">حفلة رقم 2</option>
-    </select>
-    
-    <input id="userName" placeholder="اسم الزبون">
-    <select id="ticketType">
-      <option>Regular</option>
-      <option>VIP</option>
-    </select>
-    <button onclick="createTicket()">توليد تذكرة QR</button>
-
-    <div id="qrcode-container">
-      <div id="qrcode"></div>
-      <p id="ticketInfo"></p>
-      <button onclick="window.print()">طباعة</button>
+        <div class="card">
+            <h3 style="margin-top:0">Entry Scanner</h3>
+            <div id="reader"></div>
+            <div id="scanMsg" style="margin-top:10px; font-weight:bold; text-align:center;"></div>
+        </div>
     </div>
 
-    <hr>
-    <h3>فحص التذكرة</h3>
-    <div id="reader"></div>
-    <p id="stats"></p>
-  </div>
-
 <script>
-// المفاتيح الخاصة بك من صورتك الأخيرة
+// Firebase Config (Your current config)
 const firebaseConfig = {
     apiKey: "AIzaSyDbla1Ok8aSs2IUUeB6v-2tRriNPWmYTvE",
     authDomain: "euphoria-tickets-480c5.firebaseapp.com",
@@ -65,54 +70,43 @@ const firebaseConfig = {
     messagingSenderId: "633424255364",
     appId: "1:633424255364:web:6dcca65c27d5bb207825d1"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-function login() {
-  if(document.getElementById("pass").value === "euphoria+249"){
-    document.getElementById("login").style.display="none";
-    document.getElementById("app").style.display="block";
-    startScanner();
-  }
+// Live Stats Sync
+db.collection("tickets").onSnapshot(snap => {
+    let t = snap.size, c = 0;
+    snap.forEach(doc => { if(doc.data().used) c++; });
+    document.getElementById("total").innerText = t;
+    document.getElementById("checked").innerText = c;
+});
+
+function generateTicket() {
+    const name = document.getElementById("guestName").value;
+    const type = document.getElementById("ticketType").value;
+    const party = document.getElementById("eventSelect").value;
+    if(!name) return alert("Please enter guest name");
+    const id = "EUP-" + Math.random().toString(36).substr(2, 7).toUpperCase();
+    db.collection("tickets").doc(id).set({ name, type, party, used: false }).then(() => {
+        document.getElementById("qrcode").innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), { text: id, width: 160, height: 160 });
+        document.getElementById("tInfo").innerHTML = `${name}<br>${type} | ${party}`;
+        document.getElementById("ticket-output").style.display = "block";
+    });
 }
 
-function createTicket(){
-  let name = document.getElementById("userName").value;
-  let type = document.getElementById("ticketType").value;
-  let eventId = document.getElementById("eventSelect").value;
-  let id = eventId + "_" + Date.now();
-
-  db.collection("tickets").doc(id).set({
-    name: name,
-    type: type,
-    eventId: eventId,
-    used: false
-  }).then(() => {
-    document.getElementById("qrcode").innerHTML = "";
-    new QRCode(document.getElementById("qrcode"), id);
-    document.getElementById("ticketInfo").innerText = name + " (" + type + ")";
-    document.getElementById("qrcode-container").style.display = "block";
-  });
-}
-
-function startScanner(){
-  const scanner = new Html5Qrcode("reader");
-  scanner.start({ facingMode: "environment" }, { fps: 10 }, (decodedText) => {
-    checkTicket(decodedText);
-  });
-}
-
-function checkTicket(id){
-  db.collection("tickets").doc(id).get().then(doc => {
-    if(!doc.exists) alert("❌ غير موجودة");
-    else if(doc.data().used) alert("⚠️ استخدمت سابقاً");
-    else {
-      db.collection("tickets").doc(id).update({used: true});
-      alert("✅ صالحة لـ: " + doc.data().name);
-    }
-  });
-}
+const scanner = new Html5Qrcode("reader");
+scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (id) => {
+    db.collection("tickets").doc(id).get().then(doc => {
+        const msg = document.getElementById("scanMsg");
+        if(!doc.exists) msg.innerHTML = "<span style='color:#f44336'>❌ INVALID TICKET</span>";
+        else if(doc.data().used) msg.innerHTML = `<span style='color:#ff9800'>⚠️ ALREADY USED: ${doc.data().name}</span>`;
+        else {
+            db.collection("tickets").doc(id).update({ used: true });
+            msg.innerHTML = `<span style='color:#4caf50'>✅ ACCESS GRANTED: ${doc.data().name}</span>`;
+        }
+    });
+});
 </script>
 </body>
 </html>
