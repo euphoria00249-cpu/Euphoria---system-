@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,110 +9,95 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    
     <style>
-        :root { --primary: #9d4edd; --bg: #0b0b0f; --card: #16161d; --text: #ffffff; --success: #4ade80; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
-        .container { max-width: 1100px; margin: auto; display: none; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px; }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box; outline: none; }
-        button { background: var(--primary); font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
+        :root { --primary: #9d4edd; --bg: #0b0b0f; --card: #16161d; --text: #ffffff; --danger: #ef4444; --success: #4ade80; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        .container { max-width: 600px; margin: auto; display: none; }
+        .card { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid #333; margin-bottom: 15px; }
+        input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 10px; border: 1px solid #444; background: #222; color: white; box-sizing: border-box; font-size: 16px; }
+        button { background: var(--primary); font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
         button:active { transform: scale(0.98); }
-        
-        .grid-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
-        @media (max-width: 850px) { .grid-layout { grid-template-columns: 1fr; } }
+        .btn-danger { background: var(--danger); }
+        .btn-success { background: var(--success); color: black; }
 
-        .table-container { overflow-x: auto; max-height: 350px; border-radius: 8px; border: 1px solid #333; }
-        table { width: 100%; border-collapse: collapse; background: #111; font-size: 13px; }
-        th, td { padding: 12px; border: 1px solid #222; text-align: left; }
-        th { background: #1a1a1a; color: var(--primary); position: sticky; top: 0; }
+        /* شاشة الدخول */
+        #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        
+        /* عداد الفرز */
+        .stats { display: flex; gap: 10px; margin-bottom: 15px; }
+        .stat-box { flex: 1; background: #1a1a24; padding: 12px; border-radius: 12px; text-align: center; border: 1px solid #333; }
+        .stat-num { display: block; font-size: 22px; font-weight: bold; color: var(--primary); }
 
-        #preview-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; padding: 20px; }
-        #ticket-canvas { background: white; color: black; padding: 20px; border-radius: 15px; width: 280px; text-align: center; border: 3px solid #000; margin-bottom: 15px; }
+        /* نافذة التذكرة */
+        #ticket-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; }
+        #ticket-design { background: white; color: black; padding: 25px; border-radius: 15px; width: 260px; text-align: center; border: 5px solid #000; }
         
-        #login-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
-        .login-box { background: var(--card); padding: 30px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; border: 1px solid #333; }
-        
-        #reader { width: 100%; border-radius: 12px; border: 2px solid var(--primary); overflow: hidden; background: #000; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        .badge-in { background: var(--success); color: black; }
-        .badge-out { background: #444; color: white; }
+        /* الأرشيف */
+        .archive-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        .archive-table th, .archive-table td { padding: 8px; border: 1px solid #222; text-align: left; }
+        .row-in { background: rgba(74, 222, 128, 0.1); }
+        .action-btns { display: flex; gap: 5px; }
+        .mini-btn { padding: 5px; font-size: 10px; width: auto; margin: 0; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div class="login-box">
-        <img src="https://i.ibb.co/vxWm8J6M/image.png" style="width:80px; border-radius:50%; margin-bottom:15px;">
-        <h3>EUPHORIA SYSTEM</h3>
-        <input type="password" id="passCode" placeholder="Enter Password">
-        <button onclick="checkAuth()">UNLOCK SYSTEM</button>
+    <div style="text-align: center; width: 80%;">
+        <div style="font-size: 50px; margin-bottom: 10px;">💎</div>
+        <h2 style="color: var(--primary); letter-spacing: 2px;">EUPHORIA ELITE</h2>
+        <input type="password" id="adminPass" placeholder="Enter Password">
+        <button onclick="unlock()">UNLOCK SYSTEM</button>
     </div>
 </div>
 
-<div id="preview-overlay">
-    <div id="ticket-canvas">
-        <h2 style="margin:0; border-bottom: 2px solid #000; padding-bottom:5px;">EUPHORIA ELITE</h2>
-        <div id="qr-box" style="display:flex; justify-content:center; margin: 15px 0;"></div>
-        <div id="ticket-info" style="font-weight:bold; text-align: left; font-size: 13px; line-height: 1.6; font-family: monospace;"></div>
-        <p style="font-size:9px; color:#666; margin-top:10px; border-top: 1px dotted #000;">DIGITAL PASS - NON TRANSFERABLE</p>
+<div id="ticket-modal">
+    <div id="ticket-design">
+        <h2 style="margin:0; font-weight: 900;">EUPHORIA</h2>
+        <p style="margin:0; font-size:10px; letter-spacing:3px;">ELITE ACCESS</p>
+        <div id="qrcode" style="display:flex; justify-content:center; margin:15px 0;"></div>
+        <div id="ticket-info" style="font-family:monospace; font-size:12px; text-align:left; border-top: 1px solid #ddd; padding-top:10px;"></div>
     </div>
-    <div style="width: 280px; display: flex; flex-direction: column; gap: 10px;">
-        <button style="background:black;" onclick="saveTicketImage()">📥 SAVE TO GALLERY</button>
-        <button style="background:#555;" onclick="closePreview()">CLOSE</button>
-    </div>
+    <button style="width:270px; margin-top:15px; background:var(--success); color:black;" onclick="saveTicket()">📥 SAVE TO GALLERY</button>
+    <button style="width:270px; background:#444;" onclick="closeModal()">CLOSE</button>
 </div>
 
-<div class="container" id="main-app">
-    <header style="text-align: center; margin-bottom: 25px;">
-        <img src="https://i.ibb.co/vxWm8J6M/image.png" style="width:50px; border-radius:50%;">
-        <h2 style="margin:5px 0; letter-spacing: 2px;">EUPHORIA ELITE PRO</h2>
-        <div id="live-counter" style="color:var(--success); font-weight: bold;">Loading...</div>
-    </header>
+<div class="container" id="app">
+    <div class="stats">
+        <div class="stat-box">Total<span class="stat-num" id="totalCount">0</span></div>
+        <div class="stat-box">Inside<span class="stat-num" id="inCount" style="color:var(--success)">0</span></div>
+    </div>
 
-    <div class="grid-layout">
-        <div>
-            <div class="card">
-                <h3 style="margin-top:0">🎫 Issue Ticket</h3>
-                <input type="text" id="guestName" placeholder="Guest Name">
-                <button onclick="createTicket()">GENERATE TICKET</button>
-            </div>
+    <div class="card">
+        <h3>🎫 Issue Ticket</h3>
+        <input type="text" id="guest" placeholder="Guest Full Name">
+        <button onclick="issue()">CREATE TICKET</button>
+    </div>
 
-            <div class="card" style="border: 1px solid var(--primary);">
-                <h3 style="margin-top:0; color:var(--primary);">🛡️ CHECK-IN CONTROL</h3>
-                <div id="reader"></div>
-                <div style="margin-top: 15px;">
-                    <input type="text" id="manualId" placeholder="Enter ID (e.g. EUP-XXXX)">
-                    <button onclick="processCheckIn(document.getElementById('manualId').value)" style="background:var(--success); color:black;">MANUAL CHECK-IN</button>
-                </div>
-                <div id="statusMsg" style="text-align:center; font-weight:bold; margin-top:10px; min-height: 20px;"></div>
-            </div>
-        </div>
+    <div class="card" style="border-color: var(--success);">
+        <h3>🛡️ Check-in Control</h3>
+        <div id="reader" style="border-radius:10px; overflow:hidden; background: #000;"></div>
+        <input type="text" id="manualID" placeholder="Enter ID Manually (e.g. EUP-XXXXX)" style="margin-top:10px;">
+        <button class="btn-success" onclick="verify(document.getElementById('manualID').value)">CONFIRM ENTRY</button>
+        <div id="msg" style="text-align:center; padding:10px; font-weight:bold; min-height: 40px;"></div>
+    </div>
 
-        <div>
-            <div class="card">
-                <h3 style="margin-top:0">📋 All Registered Guests</h3>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>Guest</th><th>Status</th><th>Ticket</th></tr></thead>
-                        <tbody id="fullRegistry"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card" style="border: 1px solid var(--success);">
-                <h3 style="margin-top:0; color:var(--success)">✅ Inside Now (Scanned)</h3>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>Guest</th><th>Entry Time</th><th>ID</th></tr></thead>
-                        <tbody id="insideLog"></tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="card">
+        <h3>📋 Ticket Archive & Registry</h3>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table class="archive-table">
+                <thead>
+                    <tr><th>Name</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="archiveBody"></tbody>
+            </table>
         </div>
     </div>
 </div>
 
 <script>
+// بيانات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyDbla1Ok8aSs2IUUeB6v-2tRriNPWmYTvE",
     authDomain: "euphoria-tickets-480c5.firebaseapp.com",
@@ -125,101 +109,98 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-function checkAuth() {
-    if(document.getElementById("passCode").value === "euphoria+249") {
+// الدخول
+function unlock() {
+    if(document.getElementById("adminPass").value === "euphoria+249") {
         document.getElementById("login-screen").style.display = "none";
-        document.getElementById("main-app").style.display = "block";
-        startScanner();
-    } else { alert("Access Denied"); }
+        document.getElementById("app").style.display = "block";
+        initScanner();
+    } else { alert("Access Denied!"); }
 }
 
-// تحديث السجلات لحظياً (Real-time Sync)
-db.collection("tickets").orderBy("dateIssued", "desc").onSnapshot(snap => {
-    const registry = document.getElementById("fullRegistry");
-    const inside = document.getElementById("insideLog");
-    registry.innerHTML = ""; inside.innerHTML = "";
+// تحديث الأرشيف والعدادات
+db.collection("tickets").orderBy("createdAt", "desc").onSnapshot(snap => {
+    const body = document.getElementById("archiveBody");
     let inCount = 0;
-
+    body.innerHTML = "";
     snap.forEach(doc => {
-        const d = doc.data(); const id = doc.id;
-        const statusClass = d.used ? 'badge-in' : 'badge-out';
-        const statusText = d.used ? 'INSIDE' : 'WAITING';
-        
-        // السجل العام (مع زر الحصول على التذكرة في أي وقت)
-        registry.innerHTML += `<tr>
-            <td>${d.name}</td>
-            <td><span class="badge ${statusClass}">${statusText}</span></td>
-            <td><button onclick="getTicketAnytime('${id}','${d.name}')" style="padding:4px 8px; font-size:10px;">VIEW</button></td>
-        </tr>`;
-        
-        // سجل الفرز (من قاموا بالمسح)
-        if(d.used) {
-            inCount++;
-            inside.innerHTML += `<tr>
+        const d = doc.data();
+        if(d.used) inCount++;
+        body.innerHTML += `
+            <tr class="${d.used ? 'row-in' : ''}">
                 <td>${d.name}</td>
-                <td style="color:var(--success)">${d.checkTime || '---'}</td>
-                <td style="font-family:monospace; font-size:10px;">${id}</td>
+                <td>${d.used ? '✅' : '⏳'}</td>
+                <td class="action-btns">
+                    <button class="mini-btn" onclick="reopen('${doc.id}', '${d.name}')">View</button>
+                    <button class="mini-btn btn-danger" onclick="deleteTicket('${doc.id}')">Del</button>
+                </td>
             </tr>`;
-        }
     });
-    document.getElementById("live-counter").innerText = `TOTAL GUESTS: ${snap.size} | INSIDE HALL: ${inCount}`;
+    document.getElementById("totalCount").innerText = snap.size;
+    document.getElementById("inCount").innerText = inCount;
 });
 
-function createTicket() {
-    const name = document.getElementById("guestName").value;
-    if(!name) return alert("Please enter a name");
+// إصدار تذكرة
+function issue() {
+    const name = document.getElementById("guest").value;
+    if(!name) return;
     const id = "EUP-" + Math.random().toString(36).substr(2, 5).toUpperCase();
     db.collection("tickets").doc(id).set({
-        name, used: false, dateIssued: firebase.firestore.FieldValue.serverTimestamp()
+        name: name,
+        used: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
-        getTicketAnytime(id, name);
-        document.getElementById("guestName").value = "";
+        reopen(id, name);
+        document.getElementById("guest").value = "";
     });
 }
 
-// وظيفة الحصول على التذكرة في أي وقت
-function getTicketAnytime(id, name) {
-    document.getElementById("qr-box").innerHTML = "";
-    new QRCode(document.getElementById("qr-box"), { text: id, width: 160, height: 160 });
-    document.getElementById("ticket-info").innerText = `ID: ${id}\nGUEST: ${name.toUpperCase()}\nVERIFIED BY EUPHORIA ELITE`;
-    document.getElementById("preview-overlay").style.display = "flex";
+// التحقق من التذكرة (التشك إن)
+function verify(id) {
+    if(!id) return;
+    const cleanID = id.trim().toUpperCase();
+    db.collection("tickets").doc(cleanID).get().then(doc => {
+        const m = document.getElementById("msg");
+        if(!doc.exists) { m.innerText = "❌ INVALID ID"; m.style.color="var(--danger)"; }
+        else if(doc.data().used) { m.innerText = "⚠️ ALREADY INSIDE"; m.style.color="orange"; }
+        else {
+            db.collection("tickets").doc(cleanID).update({ used: true, checkTime: new Date().toLocaleTimeString() });
+            m.innerText = "✅ WELCOME: " + doc.data().name; m.style.color="var(--success)";
+            document.getElementById("manualID").value = "";
+        }
+    });
 }
 
-function saveTicketImage() {
-    html2canvas(document.getElementById("ticket-canvas")).then(canvas => {
+// حذف تذكرة
+function deleteTicket(id) {
+    if(confirm("Delete this ticket permanently?")) {
+        db.collection("tickets").doc(id).delete();
+    }
+}
+
+// فتح التذكرة مرة أخرى
+function reopen(id, name) {
+    document.getElementById("qrcode").innerHTML = "";
+    new QRCode(document.getElementById("qrcode"), { text: id, width: 150, height: 150 });
+    document.getElementById("ticket-info").innerText = `TICKET ID: ${id}\nGUEST: ${name.toUpperCase()}\nSTATUS: VERIFIED`;
+    document.getElementById("ticket-modal").style.display = "flex";
+}
+
+// حفظ كصورة
+function saveTicket() {
+    html2canvas(document.getElementById("ticket-design")).then(canvas => {
         const link = document.createElement('a');
-        link.download = `Euphoria-Ticket-${Date.now()}.png`;
+        link.download = 'Euphoria_Ticket.png';
         link.href = canvas.toDataURL();
         link.click();
     });
 }
 
-// معالجة عملية التشيك إن (سواء كاميرا أو يدوي)
-function processCheckIn(id) {
-    if(!id) return;
-    const msg = document.getElementById("statusMsg");
-    db.collection("tickets").doc(id.trim().toUpperCase()).get().then(doc => {
-        if(!doc.exists) {
-            msg.innerText = "❌ INVALID ID"; msg.style.color = "red";
-        } else if(doc.data().used) {
-            msg.innerText = "⚠️ ALREADY INSIDE: " + doc.data().name; msg.style.color = "orange";
-        } else {
-            db.collection("tickets").doc(id.trim().toUpperCase()).update({
-                used: true,
-                checkTime: new Date().toLocaleTimeString()
-            });
-            msg.innerText = "✅ GRANTED: " + doc.data().name; msg.style.color = var(--success);
-            document.getElementById("manualId").value = "";
-        }
-        setTimeout(() => msg.innerText = "", 3000); // إخفاء الرسالة بعد 3 ثواني
-    });
+function initScanner() {
+    const scanner = new Html5Qrcode("reader");
+    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, (id) => verify(id));
 }
-
-function closePreview() { document.getElementById("preview-overlay").style.display = "none"; }
-function startScanner() {
-    const sc = new Html5Qrcode("reader");
-    sc.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (id) => processCheckIn(id));
-}
+function closeModal() { document.getElementById("ticket-modal").style.display = "none"; }
 </script>
 </body>
 </html>
