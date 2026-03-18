@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Euphoria Elite | Secure Management</title>
+    <title>Euphoria Elite | Advanced Archive System</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -11,13 +11,12 @@
     <style>
         :root { --primary: #9d4edd; --bg: #0b0b0f; --card: #16161d; --text: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
-        .container { max-width: 900px; margin: auto; display: none; } /* Hidden by default */
+        .container { max-width: 900px; margin: auto; display: none; }
         
-        /* Login Screen */
         #login-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
         .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid #333; width: 85%; max-width: 350px; text-align: center; }
         
-        .logo { width: 80px; border-radius: 50%; border: 2px solid var(--primary); margin-bottom: 10px; }
+        .logo { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--primary); margin-bottom: 10px; object-fit: cover; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .stat-box { background: var(--card); padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #333; }
         .stat-box div { font-size: 24px; font-weight: bold; color: var(--primary); }
@@ -26,18 +25,21 @@
         input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box; }
         button { background: var(--primary); font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; }
 
+        /* Tables & Archive */
         .table-container { overflow-x: auto; margin-top: 10px; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; background: #111; font-size: 13px; }
         th, td { padding: 12px; border: 1px solid #222; text-align: left; }
         th { background: #1a1a1a; color: var(--primary); text-transform: uppercase; font-size: 11px; }
-        .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        .bg-success { background: #2e7d32; color: white; }
-        .bg-wait { background: #444; color: #ccc; }
+        .btn-reprint { background: #4caf50; color: white; padding: 5px 10px; border-radius: 5px; font-size: 10px; border: none; cursor: pointer; width: auto; margin: 0; }
 
+        /* Preview Overlay */
+        #ticket-preview-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
+        .preview-box { background: white; color: black; padding: 30px; border-radius: 15px; text-align: center; width: 300px; border: 3px dashed #000; }
+        
         #print-section { display: none; }
         @media print {
             body * { display: none !important; }
-            #print-section { display: block !important; position: absolute; top: 0; left: 0; width: 100%; text-align: center; color: black !important; background: white !important; padding: 50px; }
+            #print-section { display: block !important; position: absolute; top: 0; left: 0; width: 100%; text-align: center; color: black !important; background: white !important; padding: 30px; }
         }
         #reader { width: 100%; border-radius: 12px; border: 2px solid var(--primary); background: #000; overflow: hidden; }
     </style>
@@ -48,15 +50,25 @@
     <div class="login-box">
         <img src="https://i.ibb.co/vxWm8J6M/image.png" class="logo">
         <h3>EUPHORIA LOGIN</h3>
-        <input type="password" id="passCode" placeholder="Enter System Password">
-        <button onclick="checkAuth()">Unlock System</button>
+        <input type="password" id="passCode" placeholder="Password">
+        <button onclick="checkAuth()">Unlock</button>
+    </div>
+</div>
+
+<div id="ticket-preview-overlay">
+    <div class="preview-box">
+        <h2 style="margin:0; border-bottom: 2px solid #000; padding-bottom: 10px;">EUPHORIA ELITE</h2>
+        <div id="display-qr" style="display:flex; justify-content:center; margin: 20px 0;"></div>
+        <div id="display-info" style="font-weight:bold; text-align: left; font-size: 14px; line-height: 1.5;"></div>
+        <button onclick="window.print()" style="background:black; color:white; margin-top:20px; width:100%;">Print Ticket</button>
+        <button onclick="closePreview()" style="background:#888; margin-top:10px; width:100%;">Close</button>
     </div>
 </div>
 
 <div class="container" id="main-app">
-    <div style="text-align: center; margin-bottom: 20px; padding-top: 20px;">
+    <div style="text-align: center; margin-bottom: 20px;">
         <img src="https://i.ibb.co/vxWm8J6M/image.png" class="logo">
-        <h2 style="margin:0; letter-spacing: 3px;">EUPHORIA ELITE PRO</h2>
+        <h2 style="margin:0; letter-spacing: 3px;">EUPHORIA ELITE</h2>
     </div>
 
     <div class="stats-grid">
@@ -65,36 +77,36 @@
     </div>
 
     <div class="card">
-        <h3 style="margin-top:0; color:var(--primary)">🎫 Issue Ticket</h3>
-        <input type="text" id="guestName" placeholder="Enter Full Guest Name">
+        <h3 style="margin:0; color:var(--primary)">🎫 Issue New Ticket</h3>
+        <input type="text" id="guestName" placeholder="Full Guest Name">
         <select id="eventSelect">
             <script>for(let i=1; i<=20; i++) document.write(`<option>Party Event ${i}</option>`);</script>
         </select>
-        <select id="ticketType"><option>Regular Access</option><option>VIP Access 💎</option></select>
-        <button onclick="createTicket()">Generate & Print</button>
+        <select id="ticketType"><option>Regular</option><option>VIP 💎</option></select>
+        <button onclick="createTicket()">Generate & View</button>
     </div>
 
     <div class="card">
-        <h3 style="margin-top:0; color:var(--primary)">📷 Scanner</h3>
+        <h3 style="margin:0; color:var(--primary)">📷 Scanner</h3>
         <div id="reader"></div>
-        <div id="scanResult" style="margin-top:15px; text-align:center; font-weight:bold; padding: 10px; border-radius: 8px;"></div>
+        <div id="scanResult" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
 
     <div class="card">
-        <h3 style="margin-top:0">📋 Issued Tickets Registry</h3>
+        <h3 style="margin:0">📋 Issued Tickets Registry</h3>
         <div class="table-container">
             <table>
-                <thead><tr><th>ID</th><th>Name</th><th>Event</th><th>Status</th></tr></thead>
+                <thead><tr><th>ID</th><th>Name</th><th>Action</th></tr></thead>
                 <tbody id="allTableBody"></tbody>
             </table>
         </div>
     </div>
 
     <div class="card">
-        <h3 style="margin-top:0; color:#4ade80">✅ Checked-in Guests</h3>
+        <h3 style="margin:0; color:#4ade80">✅ Checked-in Log</h3>
         <div class="table-container">
             <table>
-                <thead><tr><th>ID</th><th>Name</th><th>Entry Time</th></tr></thead>
+                <thead><tr><th>ID</th><th>Name</th><th>Time</th></tr></thead>
                 <tbody id="checkTableBody"></tbody>
             </table>
         </div>
@@ -104,7 +116,7 @@
 <div id="print-section">
     <h1 style="border-bottom: 3px solid #000; padding-bottom: 15px;">EUPHORIA ELITE</h1>
     <div id="p-qr" style="display:flex; justify-content:center; margin: 30px 0;"></div>
-    <div id="p-info" style="font-size: 22px; line-height: 2; text-align: left; font-family: monospace;"></div>
+    <div id="p-info" style="font-size: 22px; text-align: left; line-height: 2;"></div>
 </div>
 
 <script>
@@ -119,19 +131,14 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔑 Authentication Function
 function checkAuth() {
-    const input = document.getElementById("passCode").value;
-    if(input === "euphoria+249") {
+    if(document.getElementById("passCode").value === "euphoria+249") {
         document.getElementById("login-screen").style.display = "none";
         document.getElementById("main-app").style.display = "block";
         startScanner();
-    } else {
-        alert("Wrong Password! Access Denied.");
-    }
+    } else { alert("Wrong Password!"); }
 }
 
-// 📊 Live Data
 db.collection("tickets").orderBy("dateIssued", "desc").onSnapshot(snap => {
     let t = snap.size, c = 0;
     const allBody = document.getElementById("allTableBody");
@@ -140,8 +147,12 @@ db.collection("tickets").orderBy("dateIssued", "desc").onSnapshot(snap => {
     snap.forEach(doc => {
         const d = doc.data(); const id = doc.id;
         if(d.used) c++;
-        allBody.innerHTML += `<tr><td>${id}</td><td>${d.name}</td><td>${d.party}</td><td><span class="status-badge ${d.used?'bg-success':'bg-wait'}">${d.used?'INSIDE':'WAITING'}</span></td></tr>`;
-        if(d.used) checkBody.innerHTML += `<tr><td>${id}</td><td>${d.name}</td><td>${d.checkTime || '---'}</td></tr>`;
+        allBody.innerHTML += `<tr>
+            <td>${id}</td>
+            <td>${d.name}</td>
+            <td><button class="btn-reprint" onclick="reprint('${id}', '${d.name}', '${d.type}', '${d.party}')">Reprint</button></td>
+        </tr>`;
+        if(d.used) checkBody.innerHTML += `<tr><td>${id}</td><td>${d.name}</td><td>${d.checkTime || '--'}</td></tr>`;
     });
     document.getElementById("total").innerText = t;
     document.getElementById("checked").innerText = c;
@@ -151,27 +162,40 @@ function createTicket() {
     const name = document.getElementById("guestName").value;
     const type = document.getElementById("ticketType").value;
     const party = document.getElementById("eventSelect").value;
-    if(!name) return alert("Enter name");
+    if(!name) return alert("Enter Guest Name");
+
     const id = "EUP-" + Math.random().toString(36).substr(2, 6).toUpperCase();
-    db.collection("tickets").doc(id).set({ name, type, party, used: false, dateIssued: firebase.firestore.FieldValue.serverTimestamp() }).then(() => {
-        document.getElementById("p-qr").innerHTML = "";
-        new QRCode(document.getElementById("p-qr"), { text: id, width: 220, height: 220 });
-        document.getElementById("p-info").innerHTML = `ID: ${id}<br>GUEST: ${name.toUpperCase()}<br>TYPE: ${type}<br>EVENT: ${party}`;
-        setTimeout(() => { window.print(); }, 500);
+    db.collection("tickets").doc(id).set({
+        name, type, party, used: false, dateIssued: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        reprint(id, name, type, party);
         document.getElementById("guestName").value = "";
     });
 }
+
+function reprint(id, name, type, party) {
+    document.getElementById("display-qr").innerHTML = "";
+    document.getElementById("p-qr").innerHTML = "";
+    new QRCode(document.getElementById("display-qr"), { text: id, width: 180, height: 180 });
+    new QRCode(document.getElementById("p-qr"), { text: id, width: 220, height: 220 });
+    const info = `ID: ${id}<br>GUEST: ${name.toUpperCase()}<br>TYPE: ${type}<br>EVENT: ${party}`;
+    document.getElementById("display-info").innerHTML = info;
+    document.getElementById("p-info").innerHTML = info;
+    document.getElementById("ticket-preview-overlay").style.display = "flex";
+}
+
+function closePreview() { document.getElementById("ticket-preview-overlay").style.display = "none"; }
 
 function startScanner() {
     const scanner = new Html5Qrcode("reader");
     scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (id) => {
         const res = document.getElementById("scanResult");
         db.collection("tickets").doc(id).get().then(doc => {
-            if(!doc.exists) { res.innerHTML = "INVALID"; res.style.color = "red"; }
-            else if(doc.data().used) { res.innerHTML = "ALREADY USED"; res.style.color = "orange"; }
+            if(!doc.exists) { res.innerHTML = "❌ INVALID"; res.style.color = "red"; }
+            else if(doc.data().used) { res.innerHTML = "⚠️ USED: " + doc.data().name; res.style.color = "orange"; }
             else {
                 db.collection("tickets").doc(id).update({ used: true, checkTime: new Date().toLocaleTimeString() });
-                res.innerHTML = "GRANTED: " + doc.data().name; res.style.color = "#4caf50";
+                res.innerHTML = "✅ GRANTED: " + doc.data().name; res.style.color = "#4caf50";
             }
         });
     });
