@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Euphoria Elite | Smart Check-in</title>
+    <title>Euphoria Elite | Professional Access</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -18,27 +18,34 @@
         input, button { width: 100%; padding: 14px; margin: 5px 0; border-radius: 10px; border: 1px solid #444; background: #222; color: white; box-sizing: border-box; font-size: 16px; }
         button { background: var(--primary); font-weight: bold; border: none; cursor: pointer; }
         .btn-success { background: var(--success); color: black; }
-        .btn-danger { background: var(--danger); font-size: 11px; padding: 6px; width: auto; }
+        .btn-danger { background: var(--danger); font-size: 10px; padding: 5px; width: auto; }
+        .btn-view { background: #444; font-size: 10px; padding: 5px; width: auto; margin-right: 5px; }
         
+        /* شاشة الدخول واللوجو */
         #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .logo-img { width: 120px; height: 120px; margin-bottom: 15px; object-fit: contain; border-radius: 50%; border: 2px solid var(--primary); }
+
         .stats-bar { display: flex; gap: 10px; margin-bottom: 15px; }
         .stat-card { flex: 1; background: #1a1a24; padding: 12px; border-radius: 12px; text-align: center; border: 1px solid #333; }
         .stat-val { display: block; font-size: 24px; font-weight: bold; color: var(--primary); }
         
         #status-display { padding: 15px; border-radius: 10px; margin-top: 10px; text-align: center; font-weight: bold; display: none; border: 2px solid transparent; }
         .table-wrapper { overflow-x: auto; background: #111; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #222; }
-        .time-tag { font-size: 10px; color: var(--success); display: block; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 10px 5px; text-align: left; border-bottom: 1px solid #222; }
+        .time-tag { font-size: 9px; color: var(--success); display: block; }
+        
+        /* التذكرة المصممة */
         #ticket-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; }
-        #ticket-design { background: white; color: black; padding: 25px; border-radius: 15px; width: 270px; text-align: center; border: 4px solid #000; }
+        #ticket-design { background: white; color: black; padding: 20px; border-radius: 15px; width: 260px; text-align: center; border: 5px solid #000; position: relative; }
+        .ticket-logo { width: 60px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
     <div style="text-align: center; width: 85%;">
-        <h1 style="color:var(--primary);">EUPHORIA</h1>
+        <img src="https://i.ibb.co/v4S8L8Y/Euphoria-Logo.png" class="logo-img" alt="Logo"> <h1 style="color:var(--primary); margin:0; letter-spacing: 2px;">EUPHORIA</h1>
         <input type="password" id="adminPass" placeholder="Admin Password">
         <button onclick="unlock()">ACCESS SYSTEM</button>
     </div>
@@ -46,41 +53,40 @@
 
 <div id="ticket-modal">
     <div id="ticket-design">
+        <img src="https://i.ibb.co/v4S8L8Y/Euphoria-Logo.png" class="ticket-logo" alt="Logo">
         <h2 style="margin:0; font-weight:900;">EUPHORIA ELITE</h2>
-        <div id="qrcode" style="display:flex; justify-content:center; margin:20px 0;"></div>
-        <div id="ticket-info" style="font-family:monospace; font-size:13px; text-align:left;"></div>
+        <div id="qrcode" style="display:flex; justify-content:center; margin:15px 0;"></div>
+        <div id="ticket-info" style="font-family:monospace; font-size:12px; text-align:left; border-top: 1px solid #eee; padding-top:10px;"></div>
     </div>
-    <button style="width:270px; margin-top:20px; background:var(--success); color:black;" onclick="saveTicket()">📥 SAVE TO PHOTOS</button>
-    <button style="width:270px; background:#333;" onclick="closeModal()">CLOSE</button>
+    <button style="width:260px; margin-top:15px; background:var(--success); color:black;" onclick="saveTicket()">📥 SAVE TO PHOTOS</button>
+    <button style="width:260px; background:#333;" onclick="closeModal()">CLOSE</button>
 </div>
 
 <div class="container" id="app">
     <div class="stats-bar">
         <div class="stat-card">Total<span class="stat-val" id="totalCount">0</span></div>
-        <div class="stat-card">Inside<span class="stat-val" id="inCount" style="color:var(--success)">0</span></div>
+        <div class="stat-card">In Hall<span class="stat-val" id="inCount" style="color:var(--success)">0</span></div>
     </div>
 
     <div class="card">
         <h3>🎫 Issue Ticket</h3>
         <input type="text" id="guestName" placeholder="Guest Full Name">
-        <button onclick="issueTicket()">GENERATE TICKET</button>
+        <button onclick="issueTicket()">CREATE TICKET</button>
     </div>
 
     <div class="card" style="border-color: var(--primary);">
-        <h3>🛡️ Smart Scanner & Check-in</h3>
+        <h3>🛡️ Scan & Check-in</h3>
         <div id="reader" style="border-radius:10px; overflow:hidden; background:#000;"></div>
-        
         <div id="status-display"></div>
-        
         <input type="text" id="targetID" placeholder="ID (Manual or Auto-Scan)" style="margin-top:10px;">
         <button class="btn-success" id="confirmBtn" onclick="confirmCheckIn()" style="display:none;">CONFIRM ENTRY</button>
     </div>
 
     <div class="card">
-        <h3>📋 Live Registry & Archive</h3>
+        <h3>📋 Ticket Archive (Registry)</h3>
         <div class="table-wrapper">
             <table>
-                <thead><tr><th>Guest / Time</th><th>ID</th><th>Action</th></tr></thead>
+                <thead><tr><th>Guest / Time</th><th>ID</th><th>Actions</th></tr></thead>
                 <tbody id="registryBody"></tbody>
             </table>
         </div>
@@ -88,6 +94,7 @@
 </div>
 
 <script>
+// Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyDbla1Ok8aSs2IUUeB6v-2tRriNPWmYTvE",
     authDomain: "euphoria-tickets-480c5.firebaseapp.com",
@@ -111,12 +118,11 @@ function startScanner() {
     const scanner = new Html5Qrcode("reader");
     scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (id) => {
         document.getElementById("targetID").value = id;
-        checkTicketStatus(id);
+        checkStatus(id);
     });
 }
 
-// وظيفة فحص حالة التذكرة فورياً عند المسح
-function checkTicketStatus(id) {
+function checkStatus(id) {
     const display = document.getElementById("status-display");
     const confirmBtn = document.getElementById("confirmBtn");
     display.style.display = "block";
@@ -124,21 +130,18 @@ function checkTicketStatus(id) {
     db.collection("tickets").doc(id.trim().toUpperCase()).get().then(doc => {
         if(!doc.exists) {
             display.innerText = "❌ Ticket Not Found!";
-            display.style.borderColor = "var(--danger)";
-            display.style.color = "var(--danger)";
+            display.style.borderColor = "var(--danger)"; display.style.color = "var(--danger)";
             confirmBtn.style.display = "none";
         } else {
-            const data = doc.data();
-            if(data.used) {
-                display.innerHTML = `⚠️ ALREADY USED!<br><small>Guest: ${data.name}<br>Checked in at: ${data.checkInTime}</small>`;
-                display.style.borderColor = "var(--warning)";
-                display.style.color = "var(--warning)";
+            const d = doc.data();
+            if(d.used) {
+                display.innerHTML = `⚠️ ALREADY IN!<br><small>${d.name} entered at ${d.checkInTime}</small>`;
+                display.style.borderColor = "var(--warning)"; display.style.color = "var(--warning)";
                 confirmBtn.style.display = "none";
             } else {
-                display.innerHTML = `✅ VALID TICKET<br><small>Guest: ${data.name}</small>`;
-                display.style.borderColor = "var(--success)";
-                display.style.color = "var(--success)";
-                confirmBtn.style.display = "block"; // إظهار زر التأكيد فقط إذا كانت صالحة
+                display.innerHTML = `✅ VALID TICKET<br><small>Guest: ${d.name}</small>`;
+                display.style.borderColor = "var(--success)"; display.style.color = "var(--success)";
+                confirmBtn.style.display = "block";
             }
         }
     });
@@ -147,37 +150,36 @@ function checkTicketStatus(id) {
 function confirmCheckIn() {
     const id = document.getElementById("targetID").value.trim().toUpperCase();
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    db.collection("tickets").doc(id).update({ 
-        used: true, 
-        checkInTime: now 
-    }).then(() => {
-        document.getElementById("status-display").innerHTML = "🎉 ENTRY CONFIRMED!";
+    db.collection("tickets").doc(id).update({ used: true, checkInTime: now }).then(() => {
+        document.getElementById("status-display").innerHTML = "🎉 ACCESS GRANTED!";
         document.getElementById("confirmBtn").style.display = "none";
         document.getElementById("targetID").value = "";
     });
 }
 
-// تحديث الأرشيف والعدادات
+// تحديث الأرشيف (فرز التذاكر)
 db.collection("tickets").orderBy("createdAt", "desc").onSnapshot(snap => {
     const body = document.getElementById("registryBody");
-    let count = 0;
+    let inHall = 0;
     body.innerHTML = "";
     snap.forEach(doc => {
         const d = doc.data();
-        if(d.used) count++;
+        if(d.used) inHall++;
         body.innerHTML += `
             <tr style="${d.used ? 'background:rgba(74,222,128,0.05)' : ''}">
                 <td>
                     <b>${d.name}</b>
-                    ${d.used ? `<span class="time-tag">In: ${d.checkInTime}</span>` : '<span style="color:#444">Waiting...</span>'}
+                    ${d.used ? `<span class="time-tag">Entry: ${d.checkInTime}</span>` : '<span style="color:#555">Not here yet</span>'}
                 </td>
-                <td style="font-family:monospace; font-size:10px;">${doc.id}</td>
-                <td><button class="btn-danger" onclick="deleteDoc('${doc.id}')">Delete</button></td>
+                <td style="font-family:monospace; font-size:9px;">${doc.id}</td>
+                <td>
+                    <button class="btn-view" onclick="reopen('${doc.id}', '${d.name}')">View</button>
+                    <button class="btn-danger" onclick="del('${doc.id}')">Del</button>
+                </td>
             </tr>`;
     });
     document.getElementById("totalCount").innerText = snap.size;
-    document.getElementById("inCount").innerText = count;
+    document.getElementById("inCount").innerText = inHall;
 });
 
 function issueTicket() {
@@ -186,29 +188,26 @@ function issueTicket() {
     const id = "EUP-" + Math.random().toString(36).substr(2, 5).toUpperCase();
     db.collection("tickets").doc(id).set({
         name: name, used: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-        showModal(id, name);
-        document.getElementById("guestName").value = "";
-    });
+    }).then(() => { reopen(id, name); document.getElementById("guestName").value = ""; });
 }
 
-function showModal(id, name) {
+function reopen(id, name) {
     document.getElementById("qrcode").innerHTML = "";
     new QRCode(document.getElementById("qrcode"), { text: id, width: 160, height: 160 });
-    document.getElementById("ticket-info").innerText = `GUEST: ${name.toUpperCase()}\nID: ${id}\nDATE: 18/03/2026`;
+    document.getElementById("ticket-info").innerText = `NAME: ${name.toUpperCase()}\nID: ${id}\nACCESS: FULL ELITE`;
     document.getElementById("ticket-modal").style.display = "flex";
 }
 
 function saveTicket() {
     html2canvas(document.getElementById("ticket-design")).then(canvas => {
         const link = document.createElement('a');
-        link.download = 'Euphoria_Ticket.png';
+        link.download = 'Euphoria_Elite.png';
         link.href = canvas.toDataURL();
         link.click();
     });
 }
 
-function deleteDoc(id) { if(confirm("Delete this ticket?")) db.collection("tickets").doc(id).delete(); }
+function del(id) { if(confirm("Remove this ticket?")) db.collection("tickets").doc(id).delete(); }
 function closeModal() { document.getElementById("ticket-modal").style.display = "none"; }
 </script>
 </body>
