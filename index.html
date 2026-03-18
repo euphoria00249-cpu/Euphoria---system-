@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>Euphoria Tickets - Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body { font-family: Arial; background: #0b0b0f; color: white; text-align: center; padding: 20px; }
+    .card { background: #16161d; padding: 20px; border-radius: 15px; max-width: 400px; margin: auto; }
+    input, select, button { margin: 10px 0; padding: 12px; width: 100%; border-radius: 8px; border: none; }
+    button { background: purple; color: white; font-weight: bold; cursor: pointer; }
+    #qrcode-container { background: white; padding: 20px; margin-top: 20px; display: none; border-radius: 10px; color: black; }
+    #qrcode { display: flex; justify-content: center; }
+    #reader { width: 100%; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+  <h2>Euphoria Tickets</h2>
+
+  <div id="login" class="card">
+    <input type="password" id="pass" placeholder="كلمة المرور">
+    <button onclick="login()">دخول</button>
+  </div>
+
+  <div id="app" style="display:none;" class="card">
+    <h3>إصدار تذكرة</h3>
+    <select id="eventSelect">
+      <option value="party_1">حفلة رقم 1</option>
+      <option value="party_2">حفلة رقم 2</option>
+    </select>
+    
+    <input id="userName" placeholder="اسم الزبون">
+    <select id="ticketType">
+      <option>Regular</option>
+      <option>VIP</option>
+    </select>
+    <button onclick="createTicket()">توليد تذكرة QR</button>
+
+    <div id="qrcode-container">
+      <div id="qrcode"></div>
+      <p id="ticketInfo"></p>
+      <button onclick="window.print()">طباعة</button>
+    </div>
+
+    <hr>
+    <h3>فحص التذكرة</h3>
+    <div id="reader"></div>
+    <p id="stats"></p>
+  </div>
+
+<script>
+// المفاتيح الخاصة بك من صورتك الأخيرة
+const firebaseConfig = {
+    apiKey: "AIzaSyDbla1Ok8aSs2IUUeB6v-2tRriNPWmYTvE",
+    authDomain: "euphoria-tickets-480c5.firebaseapp.com",
+    projectId: "euphoria-tickets-480c5",
+    storageBucket: "euphoria-tickets-480c5.firebasestorage.app",
+    messagingSenderId: "633424255364",
+    appId: "1:633424255364:web:6dcca65c27d5bb207825d1"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function login() {
+  if(document.getElementById("pass").value === "euphoria+249"){
+    document.getElementById("login").style.display="none";
+    document.getElementById("app").style.display="block";
+    startScanner();
+  }
+}
+
+function createTicket(){
+  let name = document.getElementById("userName").value;
+  let type = document.getElementById("ticketType").value;
+  let eventId = document.getElementById("eventSelect").value;
+  let id = eventId + "_" + Date.now();
+
+  db.collection("tickets").doc(id).set({
+    name: name,
+    type: type,
+    eventId: eventId,
+    used: false
+  }).then(() => {
+    document.getElementById("qrcode").innerHTML = "";
+    new QRCode(document.getElementById("qrcode"), id);
+    document.getElementById("ticketInfo").innerText = name + " (" + type + ")";
+    document.getElementById("qrcode-container").style.display = "block";
+  });
+}
+
+function startScanner(){
+  const scanner = new Html5Qrcode("reader");
+  scanner.start({ facingMode: "environment" }, { fps: 10 }, (decodedText) => {
+    checkTicket(decodedText);
+  });
+}
+
+function checkTicket(id){
+  db.collection("tickets").doc(id).get().then(doc => {
+    if(!doc.exists) alert("❌ غير موجودة");
+    else if(doc.data().used) alert("⚠️ استخدمت سابقاً");
+    else {
+      db.collection("tickets").doc(id).update({used: true});
+      alert("✅ صالحة لـ: " + doc.data().name);
+    }
+  });
+}
+</script>
+</body>
+</html>
